@@ -1,0 +1,25 @@
+name: orchestrator
+description: >
+  Coordinates the multi-agent pipeline. Routes data between agents,
+  manages retries, and drives the overall corpus onboarding workflow.
+role: coordinator
+phase: all
+
+inputs:
+  - corpus_path        # Path to raw document files
+
+outputs:
+  - mcp_server         # Generated MCP server for the corpus
+
+depends_on: []
+
+model: claude-sonnet-4-5
+
+constraints:
+  - Never skip validation — always run validator before declaring success
+  - If validation fails, route issues back to the appropriate agent
+  - Log the full pipeline execution for debugging
+  - Respect agent dependencies (profiler → generator → builder → validator)
+
+memory: MEMORY.md
+skills_dir: skills/

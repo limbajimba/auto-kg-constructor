@@ -1,0 +1,28 @@
+name: kg-builder
+description: >
+  Executes the generated extraction pipeline against the parsed corpus and
+  populates the Neo4j knowledge graph with structure-preserving nodes and edges.
+role: engineering-agent
+phase: construction
+
+inputs:
+  - parsed_documents     # DoclingDocument objects
+  - extraction_pipeline  # Generated code from pipeline-generator
+  - corpus_profile       # For reference during construction
+
+outputs:
+  - knowledge_graph      # Populated Neo4j graph
+
+depends_on:
+  - pipeline-generator
+
+model: claude-sonnet-4-5
+
+constraints:
+  - Every source paragraph must have exactly one KG node (no missing, no duplicates)
+  - Preserve verbatim text content in leaf nodes
+  - All cross-references must be attempted (log unresolvable ones)
+  - Bi-temporal metadata on every node and edge
+
+memory: MEMORY.md
+skills_dir: skills/
