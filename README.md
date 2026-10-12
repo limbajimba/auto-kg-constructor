@@ -2,14 +2,14 @@
 
 AI engineering agents that transform document corpora into perfectly representative, temporally-versioned knowledge graphs with auto-generated APIs.
 
+**Status**: Proof of concept — validating core hypothesis with FRS 102.
+
 ## Quick Start
 
 ```bash
-uv sync --extra dev          # Install dependencies
-docker compose up -d          # Start Neo4j
-uv run pytest                 # Run tests
+uv sync --extra dev
+docker compose up -d
+uv run python proof/01_parse.py
 ```
 
-## Architecture
-
-See [CLAUDE.md](CLAUDE.md) for full project context and [docs/corpus-kg-landscape-analysis.md](docs/corpus-kg-landscape-analysis.md) for the landscape analysis.
+See [CLAUDE.md](CLAUDE.md) for architecture and [docs/](docs/) for the landscape analysis.

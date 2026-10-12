@@ -255,3 +255,156 @@ The closest things are:
 - **OpenClaw** has the right agent paradigm but is general-purpose, not document-specialised
 
 The gap is clear. The opportunity is to build the bridge between academic vision (SAT-Graph RAG's temporal ontology) and production reality (Docling's parsing + PageIndex's retrieval + OpenClaw's agent pattern + MCP's API standard). The hard parts we must build ourselves are: the corpus profiler, the pipeline generator, the cross-reference resolver, the temporal version manager, and the agent learning loop.
+
+
+---
+  Starting From First Principles
+
+  The Problem Statement (Distilled)
+
+  Take any authoritative document corpus → produce a perfectly representative structured
+  backend + clean APIs → so any AI agent can reason over it like a human expert.
+
+  The key words are "perfectly representative." The output must be a faithful structural
+  representation of the documents themselves — not entities extracted from them. This is
+  a fundamentally different problem from what every existing KG system solves.
+
+  What Was Wrong With The Previous Scaffold
+
+  I jumped straight to infrastructure (agent YAML files, skill loaders, 5 separate agent
+  definitions) without first understanding:
+
+  1. What does the output actually look like? — We never tested the KG schema against a
+  real document
+  2. What does Docling actually produce? — We never parsed a real PDF to see what we're
+  working with
+  3. What does the agent actually need to do? — We built a loader for agents that don't
+  exist yet
+  4. Why build a custom agent runtime? — The Claude Agent SDK already provides everything
+   we scaffolded (and more)
+
+  The scaffold was ceremony without substance — a multi-agent framework with zero domain
+  logic.
+
+  ---
+  Three Real Options
+
+  Option A: "Schema-First" — Prove the ontology against real data, then automate
+
+  Start by manually processing ONE document (FRS 102). Parse it with Docling. Inspect the
+   actual output. Design the KG schema by hand against real data, informed by SAT-Graph 
+  RAG's ontology (Work vs Expression, legislative events, bi-temporal versioning). Build
+  the graph manually. Write MCP tools manually. Prove the whole concept works end-to-end.
+   THEN automate each step.
+
+  Column 1: Start with
+  Column 2: A real PDF, Docling parsing, manual graph design
+  ────────────────────────────────────────
+  Column 1: Core artifact
+  Column 2: The KG ontology — tested against real documents
+  ────────────────────────────────────────
+  Column 1: Agents come
+  Column 2: Later, once we know exactly what they need to do
+  ────────────────────────────────────────
+  Column 1: Pro
+  Column 2: Grounded in reality. No premature abstraction. Schema tested against real
+  data
+    before building automation.
+  ────────────────────────────────────────
+  Column 1: Con
+  Column 2: Slower start. More manual exploration upfront.
+
+  Option B: "Agent-SDK-Native" — Build domain tools on top of Claude Agent SDK
+
+  The Claude Agent SDK gives us the exact runtime we were trying to build from scratch:
+  built-in tools (Read, Write, Edit, Bash, Glob, Grep), subagent orchestration, MCP
+  integration, hooks, session persistence, and Docker sandboxing. Instead of writing YAML
+   loaders and skill parsers, we build domain-specific MCP tools (Neo4j operations,
+  Docling parsing, cross-ref extraction) and let Claude Agent SDK handle orchestration.
+
+  Column 1: Start with
+  Column 2: pip install claude-agent-sdk, define agents as AgentDefinition objects
+  ────────────────────────────────────────
+  Column 1: Core artifact
+  Column 2: Domain-specific MCP tools that Claude agents use
+  ────────────────────────────────────────
+  Column 1: Agents are
+  Column 2: Claude Agent SDK query() calls with specialized prompts + tool sets
+  ────────────────────────────────────────
+  Column 1: Pro
+  Column 2: Production agent runtime from day 1. Docker sandboxing solved. Subagents,
+    hooks, sessions all built-in. Focus purely on domain logic.
+  ────────────────────────────────────────
+  Column 1: Con
+  Column 2: Tied to Anthropic. Agent loop is a black box. Cost per agent invocation.
+
+  Option C: "Docling-Graph Extension" — Extend IBM's existing pipeline
+
+  Docling-Graph already does document → Pydantic template → knowledge graph → Neo4j.
+  Their architecture includes template matching, multi-stage extraction, and graph
+  export. Our innovation would be: making template discovery automatic, switching from
+  entity-extraction to structure-preservation, adding temporal versioning, and adding MCP
+   output.
+
+  Column 1: Start with
+  Column 2: Fork/extend docling-graph, study their template system
+  ────────────────────────────────────────
+  Column 1: Core artifact
+  Column 2: Structure-preserving Pydantic templates + auto-discovery
+  ────────────────────────────────────────
+  Column 1: Agents are
+  Column 2: Extensions of Docling-Graph's existing pipeline stages
+  ────────────────────────────────────────
+  Column 1: Pro
+  Column 2: Don't reinvent document→graph pipeline. Production-quality parsing. IBM
+    backing.
+  ────────────────────────────────────────
+  Column 1: Con
+  Column 2: Docling-Graph is entity-extraction focused. Structure-preservation requires
+    rearchitecting their template model. Their ontology is wrong for our use case.
+
+  ---
+  My Recommendation: A + B Combined
+
+  Phase 1 — Schema-First (the smallest solid piece)
+
+  Take ONE real document. Parse it with Docling. Study the output. Design the KG ontology
+   by hand, informed by SAT-Graph RAG's model. Build a real graph from a real document.
+  Write real MCP tools. Validate: can an agent answer questions about FRS 102 using only
+  the KG?
+
+  This gives us the ground truth — a proven schema, a working graph, and a clear
+  understanding of what automation needs to do.
+
+  Phase 2 — Agent-SDK-Native (the automation layer)
+
+  Once we know exactly what the profiler/builder/validator agents need to do (because we
+  did it manually), build them on Claude Agent SDK. Each agent becomes a query() with
+  domain-specific MCP tools. Docker sandboxing comes free. Orchestration comes free. We
+  write zero framework code — only domain logic.
+
+  ---
+  The Smallest Starting Piece
+
+  The first commit should be:
+
+  1. Parse a real FRS 102 PDF with Docling — see what the actual output looks like
+  2. Design the KG ontology against that real output — not in the abstract
+  3. Build ONE section of FRS 102 as a graph — manually, in Neo4j
+  4. Write ONE MCP tool — get_section(section_number) that retrieves from the graph
+  5. Test — can Claude answer a question about FRS 102 using that tool?
+
+  This is a thin vertical slice through the entire system. It proves the concept before
+  we automate anything.
+
+  ---
+  Which direction do you want to go?
+
+  Sources:
+  - Claude Agent SDK Overview
+  - Building Agents with Claude Agent SDK
+  - Claude Agent SDK Demos
+  - Docker Sandboxing for Claude Code
+  - SAT-Graph RAG Paper
+  - Docling-Graph
+  - KARMA Multi-Agent KG Enrichment

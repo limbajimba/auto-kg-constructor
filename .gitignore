@@ -11,42 +11,42 @@ build/
 # Virtual environments
 .venv/
 venv/
-env/
-
-# uv
-.python-versions
 
 # IDE
 .vscode/
 .idea/
 *.swp
-*.swo
 *~
 
 # OS
 .DS_Store
-Thumbs.db
 
 # Environment
 .env
 .env.*
 !.env.example
 
-# Neo4j data (local docker volumes)
+# Neo4j docker volumes
 neo4j_data/
 neo4j_logs/
 
-# Agent memory (runtime-generated, not committed)
-agents/*/memory/
-
-# Test artifacts
+# Test / lint caches
 .pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.uv-cache/
 .coverage
 htmlcov/
-.mypy_cache/
 
 # Jupyter
 .ipynb_checkpoints/
 
-# Corpus data (too large for git)
-corpora/
+# Corpus documents (large PDFs — not in git)
+corpora/*.pdf
+
+# Proof outputs (generated at runtime)
+proof/outputs/
+
+# Third-party clone (github.com/VectifyAI/PageIndex), not ours
+PageIndex/
+.DS_Store
